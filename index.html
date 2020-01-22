@@ -37,6 +37,7 @@ textarea {
   height: 114px;
   border: 1px solid #ccc;
   border-radius: 4px;
+  font-family: monospace;
 }
 
 button {
@@ -249,15 +250,15 @@ function copyTextarea(targetElement) {
   </div>
 </div>
 
-<p class="result-link"><a id="result-link" href="#">ブックマークリンク<br>(このリンク先 URL を「ホーム画面に追加」してください)</a></p>
+<p class="result-link"><a id="result-link" href="#" target="_blank">ブックマークリンク<br>(このリンク先 URL を「ホーム画面に追加」してください)</a></p>
 
 <div class="grid">
   <div>
-    <h2>Bookmark HTML DataURL</h2>
+    <h2>Bookmark HTML</h2>
     <textarea id="result-bookmark-html-data-url" readonly placeholder="ブックマーク URL に設定する HTML の Data URL 文字列が表示されます"></textarea>
   </div>
   <div>
-    <h2>PNG Img DataURL</h2>
+    <h2>PNG DataURL</h2>
     <textarea id="result-png-img-data-url" readonly placeholder="PNG 画像の Data URL 文字列が表示されます"></textarea>
   </div>
 </div>
