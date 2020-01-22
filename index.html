@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>iOS Memo Icon Generator</title>
+    <style>
+
+*, ::before, ::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: .5rem 1rem;
+  color: #000;
+  font-family: sans-serif;
+  background: #fff;
+}
+
+h1, p, .grid {
+  margin: 0 0 1rem;
+}
+
+h1 {
+  font-size: 1.2rem;
+}
+
+h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+textarea {
+  display: block;
+  width: 100%;
+  height: 114px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+button {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 4px;
+  padding: .5rem;
+  color: #fff;
+  font-family: inherit;
+  font-size: 1rem;
+  text-align: center;
+  background: #0070ff;
+  cursor: pointer;
+}
+
+button:hover, button:focus {
+  background: #0060ee;
+}
+
+/*
+ * iOS ホーム画面のアイコンサイズ (114 x 114 px)・角丸 (18px) を再現する
+ * 
+ * - 参考 : https://stackoverflow.com/questions/2105289/iphone-app-icons-exact-radius
+ */
+.preview {
+  width: 114px;
+  height: 114px;
+  border-radius: 18px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 1rem;
+  text-align: center;
+}
+
+.result-link {
+  text-align: center;
+}
+
+    </style>
+    <script>
+
+// イベントを定義する
+document.addEventListener('DOMContentLoaded', () => {
+  // 初期表示時の処理を実行する
+  exec();
+  
+  document.getElementById('exec').addEventListener('click', exec);
+  
+  const resultBookmarkHtmlDataUrl = document.getElementById('result-bookmark-html-data-url');
+  resultBookmarkHtmlDataUrl.addEventListener('click', () => { copyTextarea(resultBookmarkHtmlDataUrl); });
+  resultBookmarkHtmlDataUrl.addEventListener('focus', () => { copyTextarea(resultBookmarkHtmlDataUrl); });
+  
+  const resultPngImgDataUrl = document.getElementById('result-png-img-data-url');
+  resultPngImgDataUrl.addEventListener('click', () => { copyTextarea(resultPngImgDataUrl); });
+  resultPngImgDataUrl.addEventListener('focus', () => { copyTextarea(resultPngImgDataUrl); });
+});
+
+/**
+ * メイン処理実行
+ */
+function exec() {
+  const inputText = document.getElementById('input-text').value;
+  
+  // 入力値がなければ何もしない
+  if(inputText.trim() === '') {
+    return;
+  }
+  
+  const canvas = document.getElementById('preview-canvas');
+  drawCanvas(canvas, inputText);
+  const pngImgDataUrl = canvas.toDataURL('image/png');
+  outputResult(inputText, pngImgDataUrl);
+}
+
+/**
+ * canvas 要素を描画する
+ * 
+ * @param {HTMLElement} canvas canvas 要素
+ * @param {string} inputText 入力値
+ */
+function drawCanvas(canvas, inputText) {
+  // TODO : フォントサイズ・行間・余白・背景色・文字色・フォントファミリ・文字揃えなどは自由変更できるようにしても良いか
+  const fontSize = 14;
+  const lineHeight = fontSize + 2;
+  const paddingX = 8;
+  const paddingY = 11;
+  
+  const context = canvas.getContext('2d');
+  context.clearRect(0, 0, canvas.width, canvas.height);  // https://maku77.github.io/js/canvas/clear.html
+  
+  // 背景
+  context.fillStyle = '#ccc';
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // 文字列
+  context.fillStyle = '#000';
+  context.font = `${fontSize}px sans-serif`;
+  context.textBaseline = 'top';
+  fillWrappedText(context, inputText, paddingX, paddingY, (canvas.width - paddingX * 2), (canvas.height - paddingY), lineHeight);
+}
+
+/**
+ * canvas 要素に文字列を折り返しながら描画する
+ * 
+ * - 参考 : https://www.html5canvastutorials.com/tutorials/html5-canvas-wrap-text-tutorial/
+ * 
+ * @param {CanvasRenderingContext2D} context canvas 要素の Context
+ * @param {string} inputText 入力値
+ * @param {number} x 文字列を描画し始める X 座標値
+ * @param {number} y 文字列を描画し始める Y 座標値。改行の度に本引数の値を更新する
+ * @param {number} maxWidth 文字列の描画範囲となる最大幅
+ * @param {number} maxHeight 文字列の描画範囲となる最大の高さ
+ * @param {number} lineHeight 行の高さ
+ */
+function fillWrappedText(context, inputText, x, y, maxWidth, maxHeight, lineHeight) {
+  const characters = inputText.split('');
+  let lineText = '';
+  
+  for(let i = 0; i < characters.length; i++) {
+    // 折り返した後の座標が描画可能範囲を超える場合は中止する
+    if(y > maxHeight) {
+      break;
+    }
+    
+    // 改行コードの場合
+    if(characters[i] === '\n') {
+      // 現在行を出力する
+      context.fillText(lineText, x, y, maxWidth);
+      // 次の行の準備をし次のループに繋ぐ
+      y += lineHeight;
+      lineText = '';
+      continue;
+    }
+    
+    const testLineText = lineText + characters[i];
+    const testWidth = context.measureText(testLineText).width;
+    
+    if(testWidth > maxWidth && i > 0) {
+      // 現在行を出力する
+      context.fillText(lineText, x, y, maxWidth);
+      // 次の行の準備をする
+      y += lineHeight;
+      lineText = characters[i];
+    }
+    else {
+      // 現在行に1文字追加する
+      lineText = testLineText;
+    }
+  }
+  
+  // Y 座標が描画可能範囲を超えない場合のみ最終行を書き込む
+  if(y <= maxHeight) {
+    context.fillText(lineText, x, y, maxWidth);
+  }
+}
+
+/**
+ * 結果を出力する
+ * 
+ * @param {string} inputText 入力値
+ * @param {string} pngImgDataUrl PNG 画像の DataURL 文字列
+ */
+function outputResult(inputText, pngImgDataUrl) {
+  document.getElementById('preview-png-img').src           = pngImgDataUrl;
+  document.getElementById('result-png-img-data-url').value = pngImgDataUrl;
+  
+  // ブックマークする HTML の DataURL 文字列を生成・設定する (本文に設定する inputText の長さは #input-text 要素の maxlength 属性で指定済)
+  const titleMaxLength = 50;
+  const titleText = inputText.substr(0, titleMaxLength).replace((/\n/gu), ' ');
+  const bodyText  = inputText.replace((/\n/gu), '<br>');
+  const bookmarkHtmlDataUrl = 'data:text/html;charset=utf-8,'
+                            + encodeURIComponent('<meta name="apple-mobile-web-app-capable" content="yes"><link rel="apple-touch-icon-precomposed" href="')
+                            + pngImgDataUrl
+                            + encodeURIComponent('"><title>' + titleText + '</title><h1 style="font-family:sans-serif;word-break:break-all">' + bodyText + '</h1>');
+  document.getElementById('result-link').href                    = bookmarkHtmlDataUrl;
+  document.getElementById('result-bookmark-html-data-url').value = bookmarkHtmlDataUrl;
+}
+
+/**
+ * テキストエリアの文字列をクリップボードにコピーさせる
+ * 
+ * @param {HTMLElement} targetElement 対象のテキストエリア要素
+ */
+function copyTextarea(targetElement) {
+  targetElement.select();
+  document.execCommand('copy');
+}
+
+    </script>
+  </head>
+  <body>
+
+<h1>iOS Memo Icon Generator</h1>
+
+<p><textarea id="input-text" placeholder="テキストを入力してください (70文字 or 6行を超える文字列は省略されます)" maxlength="70">iOS のホーム画面に設置できるメモ入りのアイコンを作成できます。</textarea></p>
+<p><button id="exec" type="button">生成する</button></p>
+
+<div class="grid">
+  <div>
+    <h2>Canvas</h2>
+    <canvas id="preview-canvas" class="preview" width="114" height="114"></canvas>
+  </div>
+  <div>
+    <h2>PNG Img</h2>
+    <img id="preview-png-img" class="preview" src="">
+  </div>
+</div>
+
+<p class="result-link"><a id="result-link" href="#">ブックマークリンク<br>(このリンク先 URL を「ホーム画面に追加」してください)</a></p>
+
+<div class="grid">
+  <div>
+    <h2>Bookmark HTML DataURL</h2>
+    <textarea id="result-bookmark-html-data-url" readonly placeholder="ブックマーク URL に設定する HTML の Data URL 文字列が表示されます"></textarea>
+  </div>
+  <div>
+    <h2>PNG Img DataURL</h2>
+    <textarea id="result-png-img-data-url" readonly placeholder="PNG 画像の Data URL 文字列が表示されます"></textarea>
+  </div>
+</div>
+
+<p>Author : <a href="http://neo.s21.xrea.com/">Neo</a> (<a href="https://twitter.com/Neos21">@Neos21</a>)</p>
+
+  </body>
+</html>
