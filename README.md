@@ -7,7 +7,7 @@ __[Enter This Web App](https://neos21.github.io/ios-memo-icon-generator/)__
 
 ## Author
 
-[Neo](http://neo.s21.xrea.com/) ([@Neos21](https://twitter.com/Neos21))
+[Neo](http://neo.s21.xrea.com/)
 
 
 ## Links
